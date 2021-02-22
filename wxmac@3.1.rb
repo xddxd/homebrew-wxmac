@@ -44,9 +44,6 @@ class WxmacAT31 < Formula
       "--with-macosx-version-min=#{MacOS.version}",
     ]
 
-    args << "--enable-stl" if build.with? "stl"
-    args << (build.with?("static") ? "--disable-shared" : "--enable-shared")
-
     system "./configure", *args
     system "make", "install"
 
@@ -61,38 +58,3 @@ class WxmacAT31 < Formula
     system bin/"wx-config", "--libs"
   end
 end
-
-__END__
---- a/include/wx/containr.h
-+++ b/include/wx/containr.h
-@@ -270,17 +270,17 @@
-
- protected:
- #ifndef wxHAS_NATIVE_TAB_TRAVERSAL
--    void OnNavigationKey(wxNavigationKeyEvent& event)
-+    virtual void OnNavigationKey(wxNavigationKeyEvent& event)
-     {
-         m_container.HandleOnNavigationKey(event);
-     }
-
--    void OnFocus(wxFocusEvent& event)
-+    virtual void OnFocus(wxFocusEvent& event)
-     {
-         m_container.HandleOnFocus(event);
-     }
-
--    void OnChildFocus(wxChildFocusEvent& event)
-+    virtual void OnChildFocus(wxChildFocusEvent& event)
-     {
-         m_container.SetLastFocus(event.GetWindow());
-         event.Skip();
---- a/include/wx/vector.h
-+++ b/include/wx/vector.h
-@@ -519,7 +519,7 @@
-         // if the ctor called below throws an exception, we need to move all
-         // the elements back to their original positions in m_values
-         wxScopeGuard moveBack = wxMakeGuard(
--                Ops::MemmoveBackward, place, place + count, after);
-+                [&]() { Ops::MemmoveBackward(place, place + count, after); });
-         if ( !after )
-             moveBack.Dismiss();
